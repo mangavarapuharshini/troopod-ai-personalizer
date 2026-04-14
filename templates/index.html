@@ -1,155 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Landing Page Personalizer</title>
-
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #2a5298, #4facfe);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
+        /* Is section mein maine changes kiye hain */
+        .personalization-card {
+            position: fixed; /* Pehle absolute tha, ab fixed hai */
+            top: 20px;       /* Top se thoda niche */
+            right: 20px;     /* Right side mein chipka hua */
+            z-index: 9999;   /* Taaki ye hamesha sabse upar dikhe */
+            width: 320px;    /* Card ki width fix kar di */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-radius: 15px;
             background: white;
-            padding: 30px;
-            border-radius: 16px;
-            width: 460px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            text-align: center;
+            border-left: 5px solid #2563eb;
+            animation: slideIn 0.5s ease-out;
         }
 
-        h1 {
-            color: #1e3c72;
-            margin-bottom: 20px;
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
-        textarea, input {
+        iframe {
             width: 100%;
-            padding: 12px;
-            margin-top: 12px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            background: #f5f7fa;
-        }
-
-        button {
-            margin-top: 20px;
-            padding: 12px;
-            width: 100%;
+            height: 600px;
             border: none;
-            border-radius: 10px;
-            color: white;
-            background: #2a5298;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #1e3c72;
-        }
-
-        #output {
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        #preview {
-            margin-top: 20px;
-        }
-
-        .iframe-wrapper {
-            position: relative;
-        }
-
-        .overlay-card {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            width: 260px;
-            z-index: 10;
-
-            /* ✅ IMPORTANT FIX: does NOT block clicks */
-            pointer-events: none;
+            border-radius: 8px;
         }
     </style>
 </head>
+<body class="bg-blue-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-6">
+        <h1 class="text-3xl font-bold text-center text-blue-900 mb-8">
+            💙 AI Landing Page Personalizer
+        </h1>
 
-<body>
+        <form action="/generate" method="POST" class="space-y-4 mb-8">
+            <div>
+                <textarea name="interest" rows="2" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="What are you interested in? (e.g. apple, fitness, travel)"></textarea>
+            </div>
+            <div>
+                <input type="url" name="url" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="https://example.com" required>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200">
+                Generate
+            </button>
+        </form>
 
-    <div class="container">
-        <h1>💙 AI Landing Page Personalizer</h1>
+        {% if personalized_content %}
+        <div class="mt-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">✨ Personalized Landing Experience:</h2>
+            
+            <div class="relative border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-100">
+                <iframe src="{{ target_url }}"></iframe>
 
-        <textarea id="ad" placeholder="Enter Ad Text"></textarea>
-        <input type="text" id="url" placeholder="Enter Landing Page URL">
-
-        <button onclick="generate()">Generate</button>
-
-        <div id="output"></div>
-        <div id="preview"></div>
+                <div class="personalization-card p-6">
+                    <div class="text-center">
+                        <span class="text-4xl mb-2 block">🚀</span>
+                        <h3 class="text-2xl font-bold text-blue-900 mb-2">Special Offer: {{ interest }}</h3>
+                        <p class="text-gray-600 mb-4">
+                            We've personalized this experience based on your interest.
+                        </p>
+                        <button class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">
+                            Claim Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
-
-    <script>
-        async function generate() {
-            const ad = document.getElementById('ad').value;
-            const url = document.getElementById('url').value;
-
-            if (!ad) {
-                document.getElementById('output').innerHTML =
-                    "<p style='color:#ff5252;'>⚠️ Please enter ad text</p>";
-                return;
-            }
-
-            document.getElementById('output').innerHTML = "⏳ Generating...";
-            document.getElementById('preview').innerHTML = "";
-
-            try {
-                const res = await fetch('/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ad, url })
-                });
-
-                const data = await res.json();
-
-                if (data.status === "error") {
-                    document.getElementById('output').innerHTML =
-                        `<p style="color:red;">❌ ${data.message}</p>`;
-                    return;
-                }
-
-                // ✅ Heading
-                document.getElementById('output').innerHTML =
-                    `<h3>✨ Personalized Landing Experience:</h3>`;
-
-                // ✅ Overlay + real page
-                if (url) {
-                    const finalUrl = url.startsWith('http') ? url : 'https://' + url;
-
-                    document.getElementById('preview').innerHTML =
-                        `<div class="iframe-wrapper">
-                            <iframe src="${finalUrl}"
-                                    style="width:100%; height:400px; border:none; border-radius:10px;">
-                            </iframe>
-
-                            <div class="overlay-card">
-                                ${data.rewritten}
-                            </div>
-                        </div>`;
-                }
-
-            } catch (err) {
-                document.getElementById('output').innerHTML =
-                    "<p style='color:red;'>❌ Something went wrong</p>";
-            }
-        }
-    </script>
-
 </body>
 </html>
