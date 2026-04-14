@@ -5,7 +5,7 @@ import google.generativeai as genai
 app = Flask(__name__)
 
 # API Key setup - Use environment variable for security or paste here for testing
-GEMINI_KEY = "AIzaSyDckA2C5hCmEQNFGpyt0piXFo2DseshCPI" 
+GEMINI_KEY = os.getenv("GEMINI_KEY")
 
 try:
     genai.configure(api_key=GEMINI_KEY)
