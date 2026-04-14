@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Landing Page Personalizer</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2a5298, #4facfe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 460px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            background: #f5f7fa;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px;
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            background: #2a5298;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1e3c72;
+        }
+
+        #output {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        #preview {
+            margin-top: 20px;
+        }
+
+        .iframe-wrapper {
+            position: relative;
+        }
+
+        .overlay-card {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            width: 260px;
+            z-index: 10;
+
+            /* ✅ IMPORTANT FIX: does NOT block clicks */
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>💙 AI Landing Page Personalizer</h1>
+
+        <textarea id="ad" placeholder="Enter Ad Text"></textarea>
+        <input type="text" id="url" placeholder="Enter Landing Page URL">
+
+        <button onclick="generate()">Generate</button>
+
+        <div id="output"></div>
+        <div id="preview"></div>
+    </div>
+
+    <script>
+        async function generate() {
+            const ad = document.getElementById('ad').value;
+            const url = document.getElementById('url').value;
+
+            if (!ad) {
+                document.getElementById('output').innerHTML =
+                    "<p style='color:#ff5252;'>⚠️ Please enter ad text</p>";
+                return;
+            }
+
+            document.getElementById('output').innerHTML = "⏳ Generating...";
+            document.getElementById('preview').innerHTML = "";
+
+            try {
+                const res = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ad, url })
+                });
+
+                const data = await res.json();
+
+                if (data.status === "error") {
+                    document.getElementById('output').innerHTML =
+                        `<p style="color:red;">❌ ${data.message}</p>`;
+                    return;
+                }
+
+                // ✅ Heading
+                document.getElementById('output').innerHTML =
+                    `<h3>✨ Personalized Landing Experience:</h3>`;
+
+                // ✅ Overlay + real page
+                if (url) {
+                    const finalUrl = url.startsWith('http') ? url : 'https://' + url;
+
+                    document.getElementById('preview').innerHTML =
+                        `<div class="iframe-wrapper">
+                            <iframe src="${finalUrl}"
+                                    style="width:100%; height:400px; border:none; border-radius:10px;">
+                            </iframe>
+
+                            <div class="overlay-card">
+                                ${data.rewritten}
+                            </div>
+                        </div>`;
+                }
+
+            } catch (err) {
+                document.getElementById('output').innerHTML =
+                    "<p style='color:red;'>❌ Something went wrong</p>";
+            }
+        }
+    </script>
+
+</body>
+</html>
